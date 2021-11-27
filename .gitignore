@@ -33,3 +33,7 @@
 
 # VS Code
 .vscode
+
+# Rust
+target
+Cargo.lock
