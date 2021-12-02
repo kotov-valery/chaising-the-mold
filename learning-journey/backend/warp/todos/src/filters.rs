@@ -1,17 +1,17 @@
-use crate::models::Storage;
 use crate::handlers;
+use crate::state::Sender;
 use warp::Filter;
 use std::convert::Infallible;
 
 static ROOT_PATH: &str = "todos";
 
 pub struct API {
-    storage: Storage,
+    tx: Sender,
 }
 
 impl API {
-    pub fn new(storage: &Storage) -> Self {
-        API { storage: storage.clone() }
+    pub fn new(tx: Sender) -> Self {
+        API { tx }
     }
 
     pub fn get_routes<'a>(&'a self)
@@ -28,7 +28,7 @@ impl API {
     {
         warp::path(ROOT_PATH)
             .and(warp::get())
-            .and(API::with_storage(self.storage.clone()))
+            .and(API::with_sender(self.tx.clone()))
             .and_then(handlers::list_todos)
     }
 
@@ -38,7 +38,7 @@ impl API {
         warp::path(ROOT_PATH)
             .and(warp::post())
             .and(warp::body::json())
-            .and(API::with_storage(self.storage.clone()))
+            .and(API::with_sender(self.tx.clone()))
             .and_then(handlers::create_todo)
     }
 
@@ -49,7 +49,7 @@ impl API {
             .and(warp::path::param::<u64>())
             .and(warp::put())
             .and(warp::body::json())
-            .and(API::with_storage(self.storage.clone()))
+            .and(API::with_sender(self.tx.clone()))
             .and_then(handlers::update_todo)
     }
 
@@ -59,14 +59,13 @@ impl API {
         warp::path(ROOT_PATH)
             .and(warp::path::param::<u64>())
             .and(warp::delete())
-            .and(API::with_storage(self.storage.clone()))
+            .and(API::with_sender(self.tx.clone()))
             .and_then(handlers::delete_todo)
     }
 
-    fn with_storage(storage: Storage)
-        -> impl Filter<Extract = (Storage,), Error = Infallible> + Clone
+    fn with_sender(tx: Sender)
+        -> impl Filter<Extract = (Sender,), Error = Infallible> + Clone
     {
-        warp::any().map(move || storage.clone())
+        warp::any().map(move || tx.clone())
     }
-
 }
