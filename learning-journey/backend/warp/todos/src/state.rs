@@ -47,7 +47,12 @@ impl State {
         }
     }
 
-    pub async fn run(& mut self) {
+    #[cfg(test)]
+    pub fn test_add_todo(&mut self, todo: Todo) {
+        self.storage.push(todo);
+    }
+
+    pub async fn run(&mut self) {
         while let Some(message) = self.rx.recv().await {
             use Message::*;
             match message {
