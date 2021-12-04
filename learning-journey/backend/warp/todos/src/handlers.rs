@@ -1,14 +1,14 @@
-use crate::models::Todo;
+use crate::models::{Todo, ListOptions};
 use crate::state::{Sender, Message, Status};
 use std::convert::Infallible;
 use warp::http::StatusCode;
 use tokio::sync::oneshot;
 
-pub async fn list_todos(tx: Sender) -> Result<impl warp::Reply, Infallible> {
+pub async fn list_todos(opts: ListOptions, tx: Sender) -> Result<impl warp::Reply, Infallible> {
     log::debug!("List todos");
 
     let (resp_tx, resp_rx) = oneshot::channel();
-    let _ = tx.send(Message::List{ resp: resp_tx }).await;
+    let _ = tx.send(Message::List{ options: opts, resp: resp_tx }).await;
 
     if let Ok(res) = resp_rx.await {
         return Ok(warp::reply::json(&res))

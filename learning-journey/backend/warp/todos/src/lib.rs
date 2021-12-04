@@ -76,10 +76,79 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::BAD_REQUEST);
     }
 
+    #[tokio::test]
+    async fn test_get_todos(){
+        let (tx, rx) = mpsc::channel(super::DEFAULT_MESSAGE_CAPACITY);
+
+        let mut state = state::State::new(rx);
+        let api = API::new(tx.clone());
+
+        let mut list = Vec::new();
+        list.push(todo1());
+        list.push(todo2());
+        for todo in list.iter() {
+            state.test_add_todo(todo.clone());
+        }
+
+        let _ = tokio::spawn(async move {
+            state.run().await;
+        });
+
+        let resp = request()
+            .method("GET")
+            .path("/todos")
+            .reply(&api.get_routes())
+            .await;
+
+        let body = String::from_utf8(resp.body().to_vec()).expect("Could not parse JSON response");
+        let body: Vec<Todo> = serde_json::from_str(&body).unwrap();
+
+        assert_eq!(resp.status(), StatusCode::OK);
+        assert_eq!(body, list);
+    }
+
+    #[tokio::test]
+    async fn test_get_todos_with_options(){
+        let (tx, rx) = mpsc::channel(super::DEFAULT_MESSAGE_CAPACITY);
+
+        let mut state = state::State::new(rx);
+        let api = API::new(tx.clone());
+
+        state.test_add_todo(todo1());
+        state.test_add_todo(todo2());
+
+        let _ = tokio::spawn(async move {
+            state.run().await;
+        });
+
+        let resp = request()
+            .method("GET")
+            .path("/todos?offset=1")
+            .reply(&api.get_routes())
+            .await;
+
+        let body = String::from_utf8(resp.body().to_vec()).expect("Could not parse JSON response");
+        let body: Vec<Todo> = serde_json::from_str(&body).unwrap();
+
+        assert_eq!(resp.status(), StatusCode::OK);
+
+        let mut expected = Vec::new();
+        expected.push(todo2());
+        assert_eq!(body, expected);
+    }
+
     fn todo1() -> Todo {
         Todo {
             id: 1,
             description: "test 1".into(),
+            completed: false,
+        }
+    }
+
+    fn todo2() -> Todo  {
+        Todo {
+            id: 2,
+            description: "test 2".into(),
             completed: false,
         }
     }

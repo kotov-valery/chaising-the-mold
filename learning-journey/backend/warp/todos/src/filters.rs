@@ -1,5 +1,6 @@
 use crate::handlers;
 use crate::state::Sender;
+use crate::models::ListOptions;
 use warp::Filter;
 use std::convert::Infallible;
 
@@ -28,6 +29,7 @@ impl API {
     {
         warp::path(ROOT_PATH)
             .and(warp::get())
+            .and(warp::query::<ListOptions>())
             .and(API::with_sender(self.tx.clone()))
             .and_then(handlers::list_todos)
     }

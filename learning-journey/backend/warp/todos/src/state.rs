@@ -1,9 +1,10 @@
-use crate::models::{self, Todo, Storage};
+use crate::models::{self, Todo, ListOptions, Storage};
 
 use tokio::sync::{mpsc, oneshot};
 
 pub enum Message {
     List {
+        options: ListOptions,
         resp: Responder<Vec<Todo>>,
     },
     Create { 
@@ -56,8 +57,13 @@ impl State {
         while let Some(message) = self.rx.recv().await {
             use Message::*;
             match message {
-                List { resp } => {
-                    let list = self.storage.clone();
+                List { options, resp } => {
+                    let list = self.storage
+                        .clone()
+                        .into_iter()
+                        .skip(options.offset.unwrap_or(0))
+                        .take(options.limit.unwrap_or(std::usize::MAX))
+                        .collect();
                     let _ = resp.send(Some(list));
                 },
                 Create { create, resp } => {
