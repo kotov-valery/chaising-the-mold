@@ -24,7 +24,13 @@ pub async fn start_web_server(port_number: u16) {
     });
 
     let _ = rocket::custom(figment)
-        .mount("/", routes![routes::hello])
+        .manage(tx.clone())
+        .mount("/", routes![
+            routes::list_todos,
+            routes::create_todo,
+            routes::delete_todo,
+            routes::update_todo,
+        ])
         .launch().await;
 
     state.await.unwrap();

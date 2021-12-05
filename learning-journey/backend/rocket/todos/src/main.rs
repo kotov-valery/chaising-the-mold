@@ -50,7 +50,7 @@ async fn main() {
     } else if enable_verbose_logging {
         env::set_var("RUST_LOG", "todos=debug");
     }
-    pretty_env_logger::init();
+    //pretty_env_logger::init();
 
     start_web_server(port_number).await;
 }
