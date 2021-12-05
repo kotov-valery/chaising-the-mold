@@ -1,12 +1,13 @@
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Todo {
     pub id: u64,
     pub description: String,
     pub completed: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct ListOptions {
     pub offset: Option<usize>,
     pub limit: Option<usize>,
