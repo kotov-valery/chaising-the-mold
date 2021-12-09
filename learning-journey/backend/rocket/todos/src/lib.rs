@@ -9,10 +9,11 @@ use tokio::sync::mpsc;
 
 const DEFAULT_MESSAGE_CAPACITY: usize = 32;
 
-pub async fn start_web_server(port_number: u16) {
+pub async fn start_web_server(host_addr: &str, port_number: u16) {
     log::debug!("Starting the web server on {} port....", port_number);
 
     let figment = rocket::Config::figment()
+        .merge(("address", host_addr))
         .merge(("port", port_number));
 
     let (tx, rx) = mpsc::channel(DEFAULT_MESSAGE_CAPACITY);

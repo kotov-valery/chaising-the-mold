@@ -6,10 +6,9 @@ use tokio::sync::mpsc;
 use actix_web::{web, App, HttpServer};
 
 const DEFAULT_MESSAGE_CAPACITY: usize = 32;
-static LOCAL_HOST: &str = "127.0.0.1";
 
-pub async fn start_web_server(port_number: u16) {
-    log::debug!("Starting the web server on {} port....", port_number);
+pub async fn start_web_server(host_addr: &str, port_number: u16) {
+    log::info!("Starting the web server on {} address on {} port....", host, port_number);
 
     let (tx, rx) = mpsc::channel(DEFAULT_MESSAGE_CAPACITY);
 
@@ -27,7 +26,7 @@ pub async fn start_web_server(port_number: u16) {
             .service(routes::delete_todo)
             .service(routes::update_todo)
     })
-    .bind((LOCAL_HOST, port_number)).unwrap()
+    .bind((host_addr, port_number)).unwrap()
     .run().await;
 
     state.await.unwrap();
