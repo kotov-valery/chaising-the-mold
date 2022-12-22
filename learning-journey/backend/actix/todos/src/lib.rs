@@ -8,7 +8,7 @@ use actix_web::{web, App, HttpServer};
 const DEFAULT_MESSAGE_CAPACITY: usize = 32;
 
 pub async fn start_web_server(host_addr: &str, port_number: u16) {
-    log::info!("Starting the web server on {} address on {} port....", host, port_number);
+    log::info!("Starting the web server on {} address on {} port....", host_addr, port_number);
 
     let (tx, rx) = mpsc::channel(DEFAULT_MESSAGE_CAPACITY);
 

@@ -8,53 +8,23 @@
 /// - `DELETE /todos/:id`: delete a specific Todo.
 
 use std::env;
-use clap::{App, Arg, AppSettings};
+use clap::{arg, ArgAction, Command};
 
 use todos::start_web_server;
 
-static LOCAL_HOST: &str = "127.0.0.1";
-
 #[actix_web::main]
 async fn main() {
-    let matches = App::new("TODO RESTful server")
+    let matches = Command::new("todos")
         .author("Valery Kotov <kotov.valery@gmail.com>")
-        .setting(AppSettings::DisableVersion)
-        .about("")
-        .arg(
-            Arg::with_name("port")
-            .short("p")
-            .long("port")
-            .help("Specify port number to start the service")
-            .value_name("PORT")
-            .default_value("3030")
-            .takes_value(true)
-            .use_delimiter(false)
-            .required(true)
-        )
-        .arg(
-            Arg::with_name("host")
-            .short("a")
-            .long("host")
-            .help("Specify ip address to run the server")
-            .default_value(LOCAL_HOST)
-            .takes_value(true)
-            .use_delimiter(false)
-            .required(true)
-        )
-        .arg(
-            Arg::with_name("verbose")
-            .short("v")
-            .long("verbose")
-            .help("Enable verbose logging")
-            .use_delimiter(false)
-            .takes_value(false)
-            .required(false)
-        )
+        .about("TODO RESTful server")
+        .arg(arg!(-p --port <PORT> "Specify port number to start the service"))
+        .arg(arg!(-a --host <HOST> "Specify ip address to run the server"))
+        .arg(arg!(-v --verbose "Enable verbose logging").action(ArgAction::SetTrue))
         .get_matches();
 
-    let enable_verbose_logging = matches.is_present("verbose");
-    let port_number = matches.value_of("port").unwrap().parse::<u16>().unwrap();
-    let host_addr = matches.value_of("host").unwrap();
+    let enable_verbose_logging = *matches.get_one::<bool>("verbose").unwrap();
+    let port_number = matches.get_one::<String>("port").unwrap().parse::<u16>().unwrap();
+    let host_addr = matches.get_one::<String>("host").unwrap();
 
     // Set `RUST_LOG=todos=debug` or pass `-v` or `--verbose`
     // as command-line argument to see debug logs.
