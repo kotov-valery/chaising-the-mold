@@ -1,0 +1,77 @@
+# 
+# Benchmark config file for `drill` benchmarking framework
+#
+# Usage:
+#   drill --benchmark benchmark.yaml --stats
+# Resouce:
+#   https://github.com/fcsonline/drill
+#
+
+---
+
+concurrency: 8
+base: 'http://localhost:3030'
+iterations: 25
+rampup: 4
+
+plan:
+  - name: Fetch TODOs (empty)
+    request:
+      url: /todos
+      method: GET
+
+  - name: Enter new TODOs
+    request:
+        url: /todos
+        method: POST
+        headers:
+            Content-Type: 'application/json'
+        body: '{"id":{{ item.id }}, "description": "A simple todo item", "completed": false}'
+    shuffle: true
+    with_items:
+        - { id: 10 }
+        - { id: 70 }
+        - { id: 15 }
+        - { id: 34 }
+        - { id: 75 }
+
+  - name: Fetch TODOs
+    request:
+      url: /todos
+      method: GET
+
+  - name: Enter new TODOs
+    request:
+        url: /todos
+        method: POST
+        headers:
+            Content-Type: 'application/json'
+        body: '{"id":{{ item.id }}, "description": "A simple todo item", "completed": true}'
+    shuffle: true
+    with_items:
+        - { id: 70 }
+        - { id: 15 }
+        - { id: 75 }
+
+  - name: Fetch TODOs
+    request:
+      url: /todos
+      method: GET
+
+  - name: Delete TODOs
+    request:
+        url: /todos/{{ item.id }}
+        method: DELETE
+    shuffle: true
+    with_items:
+        - { id: 10 }
+        - { id: 70 }
+        - { id: 15 }
+        - { id: 34 }
+        - { id: 75 }
+
+  - name: Fetch TODOs
+    request:
+      url: /todos
+      method: GET
+
