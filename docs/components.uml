@@ -1,0 +1,40 @@
+@startuml
+
+
+interface HTTP
+
+package "Backend" {
+    component Sensing {
+        [config] - Options
+        [config] --> JSON
+
+        [sensor] - SensorData
+        [sensor] --> BLE
+        [sensor] --> UART
+    }
+
+
+    [core orchestrator] -left--> Options
+    [core orchestrator] -up- InternalConfig
+    [core orchestrator] ..> [service]
+    [core orchestrator] ..> [data aggregator]
+    [core orchestrator] ..> [storage]
+
+    database "File"
+
+    [storage] --> File
+    [storage] - DataAccess
+
+    [data aggregator] --> SensorData
+    [data aggregator] --> DataAccess
+
+    component CommandLineParser {
+        [parser] - CLI 
+        [parser] --> InternalConfig
+    }
+
+    [service] -left- HTTP
+    [service] -up--> DataAccess
+}
+
+@enduml
