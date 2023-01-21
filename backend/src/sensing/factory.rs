@@ -1,5 +1,5 @@
-use super::sensor::Sensor;
 use super::config::Config;
+use super::sensor::Sensor;
 
 #[cfg_attr(test, mockall::automock)]
 pub trait SensorFactory {

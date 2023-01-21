@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 float-cmp = "0.9.0"
 mockall = "0.11.3"
+parameterized_test = "0.2.1"

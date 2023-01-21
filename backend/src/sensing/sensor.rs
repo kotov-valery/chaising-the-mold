@@ -1,7 +1,7 @@
 #[derive(Debug, Clone, Copy)]
 pub struct DataPoint {
     pub temperature: f32,
-    pub humidity: f32
+    pub humidity: f32,
 }
 
 #[cfg_attr(test, mockall::automock)]
