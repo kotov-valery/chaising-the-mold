@@ -1,7 +1,7 @@
 ///
 /// Module represents persistent storage
 ///
-mod circular_buffer;
+pub mod circular_buffer;
 
 use crate::sensing::sensor::DataPoint;
 
