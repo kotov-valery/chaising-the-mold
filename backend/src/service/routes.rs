@@ -4,7 +4,7 @@ use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
 use tokio::sync::oneshot;
 
 #[get("/measurements")]
-pub async fn list_measurements(req: HttpRequest, data: web::Data<Sender>) -> impl Responder {
+pub async fn list_measurements(_: HttpRequest, data: web::Data<Sender>) -> impl Responder {
     log::debug!("List available data");
     let tx = data.clone();
 

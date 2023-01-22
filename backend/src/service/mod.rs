@@ -11,7 +11,6 @@ use tokio::sync::mpsc;
 use crate::storage::Storage;
 
 const DEFAULT_MESSAGE_CAPACITY: usize = 32;
-
 pub struct HttpBackand {}
 
 impl HttpBackand {

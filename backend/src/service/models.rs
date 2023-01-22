@@ -3,7 +3,7 @@ use serde::Serialize;
 
 use crate::sensing::sensor::DataPoint;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Measurement {
     pub temperature: String,
     pub humidity: String,
