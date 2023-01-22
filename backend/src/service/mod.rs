@@ -26,7 +26,7 @@ impl HttpBackand {
         let _ = HttpServer::new(move || {
             App::new()
                 .app_data(web::Data::new(tx.clone()))
-                .service(routes::list_measurements)
+                .route("/measurements", web::get().to(routes::list_measurements))
         })
         .bind((host_addr, port_number))
         .unwrap()

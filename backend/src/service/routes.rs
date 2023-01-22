@@ -1,10 +1,9 @@
 use crate::service::state::{Message, Sender};
 
-use actix_web::{get, web, HttpRequest, HttpResponse, Responder};
+use actix_web::{web, HttpRequest, HttpResponse};
 use tokio::sync::oneshot;
 
-#[get("/measurements")]
-pub async fn list_measurements(_: HttpRequest, data: web::Data<Sender>) -> impl Responder {
+pub async fn list_measurements(_: HttpRequest, data: web::Data<Sender>) -> HttpResponse {
     log::debug!("List available data");
     let tx = data.clone();
 
@@ -16,4 +15,82 @@ pub async fn list_measurements(_: HttpRequest, data: web::Data<Sender>) -> impl 
         return HttpResponse::Ok().body(body);
     }
     HttpResponse::Ok().body("{}".to_string())
+}
+
+#[cfg(test)]
+mod test {
+    use actix_web::{body, http, test, web};
+    use tokio::sync::mpsc;
+
+    use super::list_measurements;
+    use crate::service::{models::Measurement, state::Message};
+
+    const DEFAULT_MESSAGE_CAPACITY: usize = 10;
+
+    #[actix_web::test]
+    async fn test_get_no_measurements() {
+        let (tx, mut rx) = mpsc::channel(DEFAULT_MESSAGE_CAPACITY);
+
+        let message_handler = tokio::spawn(async move {
+            if let Some(message) = rx.recv().await {
+                match message {
+                    Message::Get { resp } => {
+                        let _ = resp.send(None);
+                    }
+                    _ => panic!("Got wrong message type"),
+                }
+            }
+        });
+
+        let app_data = web::Data::new(tx.clone());
+
+        let req = test::TestRequest::get()
+            .insert_header(http::header::ContentType::plaintext())
+            .to_http_request();
+
+        let resp = list_measurements(req, app_data).await;
+        assert_eq!(resp.status(), http::StatusCode::OK);
+
+        let expected_body = String::from("{}");
+        let body = body::to_bytes(resp.into_body()).await;
+        assert_eq!(web::Bytes::from(expected_body), body.unwrap());
+
+        message_handler.await.unwrap();
+    }
+
+    #[actix_web::test]
+    async fn test_get_some_measurements() {
+        let test_data = vec![Measurement {
+            temperature: String::from("20.60"),
+            humidity: String::from("45.30"),
+        }];
+
+        let (tx, mut rx) = mpsc::channel(DEFAULT_MESSAGE_CAPACITY);
+
+        let message_handler = tokio::spawn(async move {
+            if let Some(message) = rx.recv().await {
+                match message {
+                    Message::Get { resp } => {
+                        let _ = resp.send(Some(test_data.clone()));
+                    }
+                    _ => panic!("Got wrong message type"),
+                }
+            }
+        });
+
+        let app_data = web::Data::new(tx.clone());
+
+        let req = test::TestRequest::get()
+            .insert_header(http::header::ContentType::plaintext())
+            .to_http_request();
+
+        let resp = list_measurements(req, app_data).await;
+        assert_eq!(resp.status(), http::StatusCode::OK);
+
+        let expected_body = String::from("[{\"temperature\":\"20.60\",\"humidity\":\"45.30\"}]");
+        let body = body::to_bytes(resp.into_body()).await;
+        assert_eq!(web::Bytes::from(expected_body), body.unwrap());
+
+        message_handler.await.unwrap();
+    }
 }

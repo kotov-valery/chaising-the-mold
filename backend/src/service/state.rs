@@ -45,8 +45,6 @@ impl State {
 
 #[cfg(test)]
 mod test {
-    use std::result;
-
     use super::{Message, State};
     use crate::sensing::sensor::DataPoint;
     use crate::service::models::Measurement;
@@ -93,7 +91,7 @@ mod test {
         if let Ok(Some(result)) = resp_rx.await {
             assert_eq!(expected_result, result);
         } else {
-            assert!(false, "Got wrong result from the state");
+            panic!("Got wrong result from the state");
         }
 
         let _ = tx.send(Message::Stop).await;
