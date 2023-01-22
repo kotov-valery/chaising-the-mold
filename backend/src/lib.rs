@@ -7,7 +7,6 @@ pub mod service;
 pub mod storage;
 
 const DEFAULT_STORAGE_CAPACITY: usize = 128;
-const DEFAULT_MESSAGE_CAPACITY: usize = 32;
 
 fn add_dummy_test_data(storage: &mut dyn Storage) {
     storage.write(DataPoint {
@@ -46,5 +45,8 @@ pub async fn start_web_service(host_addr: &str, port_number: u16) {
     let mut storage = CircularBuffer::new(DEFAULT_STORAGE_CAPACITY);
     add_dummy_test_data(&mut storage);
 
-    HttpBackand::start(host_addr, port_number, Box::new(storage)).await;
+    let backend = HttpBackand::new(Box::new(storage));
+    backend
+        .start(host_addr, port_number)
+        .await;
 }

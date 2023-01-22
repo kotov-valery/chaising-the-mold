@@ -8,6 +8,7 @@ type Receiver = mpsc::Receiver<Message>;
 pub type Sender = mpsc::Sender<Message>;
 pub type Responder<T> = oneshot::Sender<Option<T>>;
 
+#[derive(Debug)]
 pub enum Message {
     Get { resp: Responder<Vec<Measurement>> },
     Stop,

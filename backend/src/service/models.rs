@@ -1,4 +1,3 @@
-use actix_web::web::Data;
 use serde::Serialize;
 
 use crate::sensing::sensor::DataPoint;
