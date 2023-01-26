@@ -2,9 +2,10 @@
 /// Module represents working with various sensors
 ///
 pub mod sensor;
+pub mod factory;
+pub mod config;
 
-mod config;
-mod factory;
+mod uart;
 
 #[cfg(test)]
 mod tests {
@@ -31,7 +32,7 @@ mod tests {
         });
         let factory: &dyn SensorFactory = &factory_mock;
 
-        let sensor = factory.create(Config::Uart(String::from("dummy location"), 9600));
+        let mut sensor = factory.create(Config::Uart(String::from("dummy location"), 9600));
         let read_data = sensor.read_data();
         assert!(approx_eq!(
             f32,

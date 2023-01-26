@@ -1,3 +1,3 @@
 pub enum Config {
-    Uart(String, usize),
+    Uart(String, u32),
 }

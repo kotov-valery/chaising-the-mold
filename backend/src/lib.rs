@@ -1,6 +1,11 @@
 use sensing::sensor::DataPoint;
+use sensing::factory::DefaultSensorFactory;
+use sensing::config::Config;
+
 use service::HttpBackand;
 use storage::{circular_buffer::CircularBuffer, Storage};
+
+use crate::sensing::factory::SensorFactory;
 
 pub mod sensing;
 pub mod service;
