@@ -30,7 +30,7 @@ async fn main() {
     let host_addr = matches.get_one::<String>("host").unwrap();
     let enable_verbose_logging = *matches.get_one::<bool>("verbose").unwrap();
 
-    let device = matches.get_one::<String>("device");
+    let serial = matches.get_one::<String>("serial");
     let add_dummy_data = *matches.get_one::<bool>("dummy").unwrap();
 
     // Set `RUST_LOG=todos=debug` or pass `-v` or `--verbose`
@@ -43,11 +43,11 @@ async fn main() {
     }
     pretty_env_logger::init();
 
-    if let Some(device) = device {
+    if let Some(serial) = serial {
         start_web_service(
             host_addr,
             port_number,
-            config::Config::Uart(device.clone(), DEFAULT_SERIAL_BAUD_RATE),
+            config::Config::Uart(serial.clone(), DEFAULT_SERIAL_BAUD_RATE),
             add_dummy_data,
         )
         .await;
