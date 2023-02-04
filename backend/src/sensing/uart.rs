@@ -23,22 +23,28 @@ impl UartSensor {
 
 impl Sensor for UartSensor {
     fn read_data(&mut self) -> Option<DataPoint> {
-        let mut buffer: Vec<u8> = vec![0; 2000];
-        match self.serial.read(buffer.as_mut_slice()) {
-            Ok(_) => {
-                let string_data = String::from_utf8(buffer).unwrap();
-                println!("Read data from serial: {}", string_data);
-                let data_point = serde_json::from_str(&string_data);
-                match data_point {
-                    Ok(data) => Some(data),
-                    _ => None,
-                }
+        let mut string_data = String::new();
+        loop {
+            let mut buffer: Vec<u8> = vec![0; 1000];
+            match self.serial.read(buffer.as_mut_slice()) {
+                Ok(count) => {
+                    let read_data = &buffer[..count];
+                    let new_data = String::from_utf8(read_data.to_vec()).unwrap();
+                    string_data.push_str(&new_data);
+                    let string_data = string_data.trim_end();
+                    if let Ok(data_point) = serde_json::from_str::<DataPoint>(&string_data) {
+                        return Some(data_point);
+                    }
             },
-            Err(ref e) if e.kind() == io::ErrorKind::TimedOut => None,
+            Err(ref e) if e.kind() == io::ErrorKind::TimedOut => {
+                log::debug!("Timeout to read data from serial");
+                string_data.clear();
+            },
             Err(e) => {
-                eprintln!("{:?}", e);
-                None
+                log::error!("Failed to read data from serial: {:?}", e);
+                return None;
             }
+        }
         }
     }
 }

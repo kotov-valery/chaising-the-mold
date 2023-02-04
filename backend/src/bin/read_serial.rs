@@ -1,12 +1,13 @@
 /// Based on https://gitlab.com/susurrus/serialport-rs/-/blob/master/examples/receive_data.rs example
-use std::io::{self, Write};
-use std::time::Duration;
 
 use clap::{arg, Command};
 
-const SERIAL_TIMEOUT: Duration = Duration::from_millis(10);
+use backend::sensing::config;
+use backend::sensing::factory::{self, SensorFactory};
 
 fn main() {
+    pretty_env_logger::init();
+
     let matches = Command::new("Read serial data")
         .author("Valery Kotov <kotov.valery@gmail.com>")
         .about(concat!(
@@ -20,18 +21,14 @@ fn main() {
     let baud = matches.get_one::<String>("baud").unwrap();
     let baud = baud.parse::<u32>().unwrap();
 
-    let mut serial = serialport::new(device, baud)
-        .timeout(SERIAL_TIMEOUT)
-        .open()
-        .expect(&format!("Failed to open {} device with {} baud rate", &device, &baud));
-
-    let mut buffer: Vec<u8> = vec![0; 1000];
-    println!("Receiving data on {} at {} baud:", &device, &baud);
+    let sensor_factory = factory::DefaultSensorFactory{};
+    let mut sensor = sensor_factory.create(config::Config::Uart(device.clone(), baud));
     loop {
-        match serial.read(buffer.as_mut_slice()) {
-            Ok(t) => io::stdout().write_all(&buffer[..t]).unwrap(),
-            Err(ref e) if e.kind() == io::ErrorKind::TimedOut => (),
-            Err(e) => eprintln!("{:?}", e),
+        if let Some(data) = sensor.read_data() {
+            println!("Read data from serial: {:?}", data);
+        } else {
+            println!("Failed to read data from serial device");
         }
     }
+
 }
