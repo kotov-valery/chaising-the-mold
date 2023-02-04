@@ -8,6 +8,8 @@ mod state;
 use actix_web::{web, App, HttpServer};
 use tokio::sync::mpsc;
 
+use std::sync::{Arc, Mutex};
+
 use crate::storage::Storage;
 
 const DEFAULT_MESSAGE_CAPACITY: usize = 32;
@@ -20,16 +22,15 @@ pub struct HttpBackand {
 }
 
 impl HttpBackand {
-    pub fn new(storage: Box<dyn Storage + Send>) -> Self {
+    pub fn new(storage: Arc<Mutex<dyn Storage + Send>>) -> Self {
         let (tx, rx) = mpsc::channel(DEFAULT_MESSAGE_CAPACITY);
         let state = state::State::new(rx, storage);
-        Self { tx, state: Some(state) }
+        Self {
+            tx,
+            state: Some(state),
+        }
     }
-    pub async fn start(
-        mut self,
-        host_addr: &str,
-        port_number: u16,
-    ) -> Self {
+    pub async fn start(mut self, host_addr: &str, port_number: u16) -> Self {
         let state = tokio::spawn(async move {
             self.state.unwrap().run().await;
         });
@@ -64,6 +65,8 @@ mod integration_test {
     use super::*;
     use actix_web::{body, test, web, App};
 
+    use std::sync::{Arc, Mutex};
+
     #[actix_web::test]
     async fn fetch_dummy_data() {
         let (tx, rx) = mpsc::channel(DEFAULT_MESSAGE_CAPACITY);
@@ -75,7 +78,7 @@ mod integration_test {
         }];
         storage.expect_read().return_const(storage_data.clone());
 
-        let mut state = state::State::new(rx, Box::new(storage));
+        let mut state = state::State::new(rx, Arc::new(Mutex::new(storage)));
         let state = tokio::spawn(async move {
             state.run().await;
         });

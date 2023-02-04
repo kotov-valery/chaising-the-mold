@@ -14,10 +14,13 @@ pub struct UartSensor {
 impl UartSensor {
     pub fn new(location: String, baudrate: u32) -> Self {
         let serial = serialport::new(&location.clone(), baudrate)
-                .timeout(SERIAL_TIMEOUT)
-                .open()
-                .expect(&format!("Failed to open {} device with {} baud rate", location, baudrate));
-        Self {  serial }
+            .timeout(SERIAL_TIMEOUT)
+            .open()
+            .expect(&format!(
+                "Failed to open {} device with {} baud rate",
+                location, baudrate
+            ));
+        Self { serial }
     }
 }
 
@@ -35,16 +38,16 @@ impl Sensor for UartSensor {
                     if let Ok(data_point) = serde_json::from_str::<DataPoint>(&string_data) {
                         return Some(data_point);
                     }
-            },
-            Err(ref e) if e.kind() == io::ErrorKind::TimedOut => {
-                log::debug!("Timeout to read data from serial");
-                string_data.clear();
-            },
-            Err(e) => {
-                log::error!("Failed to read data from serial: {:?}", e);
-                return None;
+                }
+                Err(ref e) if e.kind() == io::ErrorKind::TimedOut => {
+                    log::debug!("Timeout to read data from serial");
+                    string_data.clear();
+                }
+                Err(e) => {
+                    log::error!("Failed to read data from serial: {:?}", e);
+                    return None;
+                }
             }
-        }
         }
     }
 }

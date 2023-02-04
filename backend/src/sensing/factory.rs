@@ -12,9 +12,7 @@ pub struct DefaultSensorFactory {}
 impl SensorFactory for DefaultSensorFactory {
     fn create(&self, config: Config) -> Box<dyn Sensor> {
         match config {
-            Config::Uart(device, baud) => {
-                Box::new(UartSensor::new(device, baud))
-            }
+            Config::Uart(device, baud) => Box::new(UartSensor::new(device, baud)),
         }
     }
 }

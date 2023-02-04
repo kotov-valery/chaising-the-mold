@@ -1,9 +1,9 @@
+pub mod config;
+pub mod factory;
 ///
 /// Module represents working with various sensors
 ///
 pub mod sensor;
-pub mod factory;
-pub mod config;
 
 mod uart;
 

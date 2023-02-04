@@ -1,5 +1,6 @@
 use crate::service::models::Measurement;
 
+use std::sync::{Arc, Mutex};
 use tokio::sync::{mpsc, oneshot};
 
 use crate::storage::Storage;
@@ -16,11 +17,11 @@ pub enum Message {
 
 pub struct State {
     rx: Receiver,
-    storage: Box<dyn Storage + Send>,
+    storage: Arc<Mutex<dyn Storage + Send>>,
 }
 
 impl State {
-    pub fn new(rx: Receiver, storage: Box<dyn Storage + Send>) -> Self {
+    pub fn new(rx: Receiver, storage: Arc<Mutex<dyn Storage + Send>>) -> Self {
         State { rx, storage }
     }
 
@@ -28,8 +29,8 @@ impl State {
         while let Some(message) = self.rx.recv().await {
             match message {
                 Message::Get { resp } => {
-                    let measurements = self
-                        .storage
+                    let storage = self.storage.lock().unwrap();
+                    let measurements = storage
                         .read()
                         .iter()
                         .map(|data| Measurement::from(data))
@@ -50,12 +51,13 @@ mod test {
     use crate::sensing::sensor::DataPoint;
     use crate::service::models::Measurement;
     use crate::storage::MockStorage;
+    use std::sync::{Arc, Mutex};
     use tokio::sync::{mpsc, oneshot};
 
     #[tokio::test]
     async fn start_and_stop() {
         let (tx, rx) = mpsc::channel(10);
-        let storage = Box::new(MockStorage::new());
+        let storage = Arc::new(Mutex::new(MockStorage::new()));
         let mut state = State::new(rx, storage);
         let state = tokio::spawn(async move {
             state.run().await;
@@ -76,7 +78,7 @@ mod test {
         let mut storage = MockStorage::new();
         storage.expect_read().return_const(measurement_data.clone());
 
-        let storage = Box::new(storage);
+        let storage = Arc::new(Mutex::new(storage));
         let mut state = State::new(rx, storage);
         let state = tokio::spawn(async move {
             state.run().await;

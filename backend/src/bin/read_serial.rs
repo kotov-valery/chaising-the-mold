@@ -1,5 +1,4 @@
 /// Based on https://gitlab.com/susurrus/serialport-rs/-/blob/master/examples/receive_data.rs example
-
 use clap::{arg, Command};
 
 use backend::sensing::config;
@@ -12,7 +11,8 @@ fn main() {
         .author("Valery Kotov <kotov.valery@gmail.com>")
         .about(concat!(
             "Application reads the data from the specified serial port ",
-            "and echoes it to standard output"))
+            "and echoes it to standard output"
+        ))
         .arg(arg!(-d --device <DEVICE> "Specify path to a serial device"))
         .arg(arg!(-b --baud <BAUD_RATE> "Specify serial baud rate"))
         .get_matches();
@@ -21,7 +21,7 @@ fn main() {
     let baud = matches.get_one::<String>("baud").unwrap();
     let baud = baud.parse::<u32>().unwrap();
 
-    let sensor_factory = factory::DefaultSensorFactory{};
+    let sensor_factory = factory::DefaultSensorFactory {};
     let mut sensor = sensor_factory.create(config::Config::Uart(device.clone(), baud));
     loop {
         if let Some(data) = sensor.read_data() {
@@ -30,5 +30,4 @@ fn main() {
             println!("Failed to read data from serial device");
         }
     }
-
 }
