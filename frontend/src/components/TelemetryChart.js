@@ -22,52 +22,44 @@ ChartJS.register(
   Legend
 )
 
-export const options = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: {
-      position: 'top'
-    },
-    title: {
-      display: true,
-      text: 'Telemetry Data'
+class TelemetryChart extends Component {
+  options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top'
+      },
+      title: {
+        display: true,
+        text: 'Telemetry Data'
+      }
     }
   }
-}
 
-export const data = {
-  labels: [],
-  datasets: [
-    {
-      label: 'Temperature',
-      data: [], //labels.map((_, index) => telemetry[index].temperature),
-      borderColor: 'rgb(255, 99, 132)',
-      backgroundColor: 'rgba(255, 99, 132, 0.5)'
-    },
-    {
-      label: 'Humidity',
-      data: [], //labels.map((_, index) => telemetry[index].humidity),
-      borderColor: 'rgb(53, 162, 235)',
-      backgroundColor: 'rgba(53, 162, 235, 0.5)'
-    }
-  ]
-}
-
-class TelemetryChart extends Component {
   render () {
-    console.log(this.props.labels)
-    data.labels = this.props.labels
-    const telemetry = this.props.telemetry
-    data.datasets[0].data = telemetry.map(
-      (_, index) => telemetry[index].temperature
-    )
-    data.datasets[1].data = telemetry.map(
-      (_, index) => telemetry[index].humidity
-    )
+    const { labels, telemetry } = this.props
+    const data = {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Temperature',
+          data: telemetry.map(entry => entry.temperature),
+          borderColor: 'rgb(255, 99, 132)',
+          backgroundColor: 'rgba(255, 99, 132, 0.5)'
+        },
+        {
+          label: 'Humidity',
+          data: telemetry.map(entry => entry.humidity),
+          borderColor: 'rgb(53, 162, 235)',
+          backgroundColor: 'rgba(53, 162, 235, 0.5)'
+        }
+      ]
+    }
+
     return (
       <div id='TelemetryChart' style={{ width: '100%', height: '100%' }}>
-        <Line options={options} data={data} />
+        <Line options={this.options} data={data} />
       </div>
     )
   }
