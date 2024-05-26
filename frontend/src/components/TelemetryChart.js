@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { SettingsConsumer } from './settingsContext'
 
 import {
   Chart as ChartJS,
@@ -58,9 +59,16 @@ class TelemetryChart extends Component {
     }
 
     return (
-      <div id='TelemetryChart' style={{ width: '100%', height: '100%' }}>
-        <Line options={this.options} data={data} />
-      </div>
+      <SettingsConsumer>
+        {componentName => {
+          if (componentName !== 'chart') return null
+          return (
+            <div id='TelemetryChart' style={{ width: '100%', height: '100%' }}>
+              <Line options={this.options} data={data} />
+            </div>
+          )
+        }}
+      </SettingsConsumer>
     )
   }
 }
