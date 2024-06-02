@@ -23,8 +23,9 @@ struct Args {
     port_number: u16,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     pretty_env_logger::init();
     let args = Args::parse();
-    todos::start_web_server(&args.host_addr, args.port_number);
+    todos::start_web_server(&args.host_addr, args.port_number).await;
 }
