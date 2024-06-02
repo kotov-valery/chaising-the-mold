@@ -6,9 +6,14 @@
 /// - `POST /todos`: create a new Todo.
 /// - `PUT /todos/:id`: update a specific Todo.
 /// - `DELETE /todos/:id`: delete a specific Todo.
+use std::process;
+
 extern crate pretty_env_logger;
+#[macro_use]
+extern crate log;
 
 use clap::Parser;
+
 use todos;
 
 /// Provides a RESTful web server managing TODOs list.
@@ -27,5 +32,8 @@ struct Args {
 async fn main() {
     pretty_env_logger::init();
     let args = Args::parse();
-    todos::start_web_server(&args.host_addr, args.port_number).await;
+    if let Err(e) = todos::start_web_server(&args.host_addr, args.port_number).await {
+        error!("Error starting web server: {}", e);
+        process::exit(1);
+    }
 }

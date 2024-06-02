@@ -3,6 +3,7 @@ extern crate log;
 
 use axum::{extract::State, routing::get, Router};
 use serde::Serialize;
+use std::error::Error;
 use std::net::{Ipv4Addr, SocketAddrV4};
 use std::sync::Arc;
 
@@ -41,7 +42,7 @@ impl AppState {
     }
 }
 
-pub async fn start_web_server(host_addr: &str, port_number: u16) {
+pub async fn start_web_server(host_addr: &str, port_number: u16) -> Result<(), Box<dyn Error>> {
     info!(
         "Starting a web service on {} address on {} port...",
         host_addr, port_number
@@ -52,13 +53,14 @@ pub async fn start_web_server(host_addr: &str, port_number: u16) {
         .route("/todos", get(get_todos))
         .with_state(storage);
 
-    let addr: Ipv4Addr = host_addr.parse().expect("parse failed");
-    let listener = tokio::net::TcpListener::bind(SocketAddrV4::new(addr, port_number))
-        .await
-        .unwrap();
-    axum::serve(listener, app).await.unwrap();
+    let addr: Ipv4Addr = host_addr.parse()?;
+    let listener = tokio::net::TcpListener::bind(SocketAddrV4::new(addr, port_number)).await?;
+    Ok(axum::serve(listener, app).await?)
 }
 
 async fn get_todos(State(state): State<Arc<AppState>>) -> String {
-    serde_json::to_string(&state.storage).unwrap()
+    serde_json::to_string(&state.storage).unwrap_or_else(|err| {
+        error!("Failed to return todo list: {}", err);
+        "Error".to_string()
+    })
 }
