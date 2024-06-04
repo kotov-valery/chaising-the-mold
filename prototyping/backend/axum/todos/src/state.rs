@@ -1,6 +1,7 @@
 use crate::models::{self, Pagination, Storage, Todo};
 
 use tokio::sync::{mpsc, oneshot};
+use uuid::Uuid;
 
 pub enum Message {
     List {
@@ -12,12 +13,13 @@ pub enum Message {
         resp: Responder<Status>,
     },
     Delete {
-        id: u64,
+        id: Uuid,
         resp: Responder<Status>,
     },
     Update {
-        id: u64,
-        update: Todo,
+        id: Uuid,
+        description: Option<String>,
+        completed: Option<bool>,
         resp: Responder<Status>,
     },
 }
@@ -54,48 +56,43 @@ impl AppState {
                 Message::List { options, resp } => {
                     let list = self
                         .storage
-                        .clone()
-                        .into_iter()
+                        .values()
                         .skip(options.offset.unwrap_or(0))
                         .take(options.limit.unwrap_or(std::usize::MAX))
-                        .collect();
+                        .cloned()
+                        .collect::<Vec<_>>();
                     let _ = resp.send(Some(list));
                 }
                 Message::Create { create, resp } => {
-                    let mut status = Status::Created;
-                    for todo in self.storage.iter() {
-                        if todo.id == create.id {
-                            log::debug!("Todo with {} id already exists", create.id);
-                            status = Status::Duplicate;
-                            break;
-                        }
+                    if self.storage.contains_key(&create.id) {
+                        let _ = resp.send(Some(Status::Duplicate));
+                        return;
                     }
-                    if status == Status::Created {
-                        self.storage.push(create);
-                    }
-                    let _ = resp.send(Some(status));
+                    self.storage.insert(create.id, create);
+                    let _ = resp.send(Some(Status::Created));
                 }
                 Message::Delete { id, resp } => {
-                    let count = self.storage.len();
-                    self.storage.retain(|todo| todo.id != id);
-
-                    let deleted = self.storage.len() != count;
-                    let mut status = Status::Deleted;
-                    if !deleted {
-                        status = Status::NotFound;
+                    if !self.storage.contains_key(&id) {
+                        let _ = resp.send(Some(Status::NotFound));
+                        return;
                     }
-                    let _ = resp.send(Some(status));
+                    self.storage.remove(&id);
+                    let _ = resp.send(Some(Status::Deleted));
                 }
-                Message::Update { id, update, resp } => {
-                    let mut status = Status::NotFound;
-                    for todo in self.storage.iter_mut() {
-                        if todo.id == id {
-                            *todo = update;
-                            status = Status::Updated;
-                            break;
-                        }
+                Message::Update { id, description, completed, resp } => {
+                    if !self.storage.contains_key(&id) {
+                        let _ = resp.send(Some(Status::NotFound));
+                        return;
                     }
-                    let _ = resp.send(Some(status));
+                    let mut todo = self.storage.get(&id).cloned().unwrap();
+                    if let Some(description) = description {
+                        todo.description = description;
+                    }
+                    if let Some(completed) = completed {
+                        todo.completed = completed;
+                    }
+                    self.storage.insert(id, todo.clone());
+                    let _ = resp.send(Some(Status::Updated));
                 }
             }
         }

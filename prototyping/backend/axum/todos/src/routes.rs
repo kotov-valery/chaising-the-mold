@@ -1,9 +1,10 @@
-use crate::models::{Pagination, Todo};
+use crate::models::{Pagination, Todo, UpdateTodo, CreateTodo};
 use crate::state::{Message, Sender, Status};
 
 use axum::extract::{Path, Query, State};
 use axum::{http::StatusCode, response::IntoResponse, Json};
 use tokio::sync::oneshot;
+use uuid::Uuid;
 
 pub async fn list_todos(
     pagination: Option<Query<Pagination>>,
@@ -26,12 +27,12 @@ pub async fn list_todos(
 
 pub async fn create_todo(
     State(sender): State<Sender>,
-    Json(input): Json<Todo>,
+    Json(input): Json<CreateTodo>,
 ) -> impl IntoResponse {
     let create = Todo {
-        id: input.id,
+        id: Uuid::new_v4(),
         description: input.description,
-        completed: input.completed,
+        completed: false,
     };
     let (resp_tx, resp_rx) = oneshot::channel();
     let _ = sender
@@ -55,7 +56,7 @@ pub async fn create_todo(
     )
 }
 
-pub async fn delete_todo(Path(id): Path<u64>, State(sender): State<Sender>) -> impl IntoResponse {
+pub async fn delete_todo(Path(id): Path<Uuid>, State(sender): State<Sender>) -> impl IntoResponse {
     let (resp_tx, resp_rx) = oneshot::channel();
     let _ = sender
         .send(Message::Delete {
@@ -79,28 +80,24 @@ pub async fn delete_todo(Path(id): Path<u64>, State(sender): State<Sender>) -> i
 }
 
 pub async fn update_todo(
-    Path(id): Path<u64>,
+    Path(id): Path<Uuid>,
     State(sender): State<Sender>,
-    Json(input): Json<Todo>,
-) -> Result<impl IntoResponse, StatusCode> {
-    let update = Todo {
-        id: input.id,
-        description: input.description,
-        completed: input.completed,
-    };
+    Json(input): Json<UpdateTodo>,
+) -> impl IntoResponse {
     let (resp_tx, resp_rx) = oneshot::channel();
     let _ = sender
         .send(Message::Update {
             id: id,
-            update: update.clone(),
+            description: input.description,
+            completed: input.completed,
             resp: resp_tx,
         })
         .await;
 
     if let Ok(Some(res)) = resp_rx.await {
         if res == Status::Updated {
-            return Ok(Json(update));
+            return (StatusCode::OK, format!("Item with id {} was updated", id));
         }
     }
-    Err(StatusCode::BAD_REQUEST)
+    (StatusCode::BAD_REQUEST, format!("Could not update {} item", id))
 }

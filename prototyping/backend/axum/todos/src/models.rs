@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Todo {
-    pub id: u64,
+    pub id: Uuid,
     pub description: String,
     pub completed: bool,
 }
@@ -13,20 +15,18 @@ pub struct Pagination {
     pub limit: Option<usize>,
 }
 
-impl Todo {
-    pub fn new(id: u64, description: &str, completed: bool) -> Self {
-        Self {
-            id: id,
-            description: description.to_string(),
-            completed: completed,
-        }
-    }
+#[derive(Debug, Deserialize)]
+pub struct CreateTodo {
+    pub description: String,
 }
 
-pub type Storage = Vec<Todo>;
+#[derive(Debug, Deserialize)]
+pub struct UpdateTodo {
+    pub description: Option<String>,
+    pub completed: Option<bool>,
+}
+
+pub type Storage = HashMap<Uuid, Todo>;
 pub fn create_storage() -> Storage {
-    vec![
-        Todo::new(1, "entry 1", false),
-        Todo::new(2, "entry 2", true),
-    ]
+    HashMap::new()
 }
