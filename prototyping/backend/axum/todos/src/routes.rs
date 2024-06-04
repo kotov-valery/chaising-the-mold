@@ -1,13 +1,23 @@
-use crate::models::Todo;
+use crate::models::{Pagination, Todo};
 use crate::state::{Message, Sender, Status};
 
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::{http::StatusCode, response::IntoResponse, Json};
 use tokio::sync::oneshot;
 
-pub async fn list_todos(State(sender): State<Sender>) -> impl IntoResponse {
+pub async fn list_todos(
+    pagination: Option<Query<Pagination>>,
+    State(sender): State<Sender>,
+) -> impl IntoResponse {
+    let Query(options) = pagination.unwrap_or_default();
+
     let (resp_tx, resp_rx) = oneshot::channel();
-    let _ = sender.send(Message::List { resp: resp_tx }).await;
+    let _ = sender
+        .send(Message::List {
+            options: options,
+            resp: resp_tx,
+        })
+        .await;
     if let Ok(Some(res)) = resp_rx.await {
         return Json(res);
     }

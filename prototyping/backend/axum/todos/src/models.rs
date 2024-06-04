@@ -7,6 +7,12 @@ pub struct Todo {
     pub completed: bool,
 }
 
+#[derive(Debug, Default, Serialize, Deserialize)]
+pub struct Pagination {
+    pub offset: Option<usize>,
+    pub limit: Option<usize>,
+}
+
 impl Todo {
     pub fn new(id: u64, description: &str, completed: bool) -> Self {
         Self {

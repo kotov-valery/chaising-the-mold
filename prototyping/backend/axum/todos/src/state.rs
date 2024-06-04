@@ -1,10 +1,10 @@
-use crate::models::{self, Storage, Todo};
+use crate::models::{self, Pagination, Storage, Todo};
 
 use tokio::sync::{mpsc, oneshot};
 
 pub enum Message {
     List {
-        //options: ListOptions,
+        options: Pagination,
         resp: Responder<Vec<Todo>>,
     },
     Create {
@@ -51,8 +51,15 @@ impl AppState {
     pub async fn run(&mut self) {
         while let Some(message) = self.rx.recv().await {
             match message {
-                Message::List { resp } => {
-                    let _ = resp.send(Some(self.storage.clone()));
+                Message::List { options, resp } => {
+                    let list = self
+                        .storage
+                        .clone()
+                        .into_iter()
+                        .skip(options.offset.unwrap_or(0))
+                        .take(options.limit.unwrap_or(std::usize::MAX))
+                        .collect();
+                    let _ = resp.send(Some(list));
                 }
                 Message::Create { create, resp } => {
                     let mut status = Status::Created;
