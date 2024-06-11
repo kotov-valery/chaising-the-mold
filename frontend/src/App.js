@@ -6,7 +6,7 @@ import { SettngsProvier } from './components/settingsContext'
 
 function App () {
   return (
-    <div className='App'>
+    <div className="App" style={{ width: '100vw', height: '100vh' }}>
       <h1>Show my telemetry data</h1>
       <hr />
       <SettngsProvier value='chart'>
@@ -16,8 +16,9 @@ function App () {
           )}
         />
       </SettngsProvier>
+
     </div>
   )
 }
 
-export default App
+export default App;
